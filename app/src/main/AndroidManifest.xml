@@ -13,18 +13,6 @@
         android:allowBackup="true"
         android:supportsRtl="true">
         
-        <!-- ランチャーに表示しないダミーアクティビティ（Xposedモジュールとして認識させるため） -->
-        <activity-alias
-            android:name=".MainActivity"
-            android:targetActivity="android.app.Activity"
-            android:enabled="false"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-        
         <!-- Xposed Module Metadata -->
         <meta-data
             android:name="xposedmodule"
