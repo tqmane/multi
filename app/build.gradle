@@ -12,15 +12,29 @@ android {
         targetSdk 35
         versionCode 1
         versionName "1.0"
+        
+        vectorDrawables.useSupportLibrary = false
+    }
+
+    signingConfigs {
+        debug {
+            // デバッグ用のデフォルト署名を使用
+        }
+        release {
+            // リリース用もデバッグ署名を使用（テスト用）
+            // 本番環境では適切なキーストアを使用してください
+        }
     }
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
         }
         debug {
             minifyEnabled false
+            signingConfig signingConfigs.debug
         }
     }
 
