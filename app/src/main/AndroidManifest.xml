@@ -17,7 +17,20 @@
         android:label="Multi Window Patch"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="true"
-        android:supportsRtl="true">
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.Material.Light.DarkActionBar">
+        
+        <!-- メインアクティビティ -->
+        <activity
+            android:name=".MainActivity"
+            android:label="Multi Window Patch"
+            android:exported="true"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         
         <!-- Xposed Module Metadata -->
         <meta-data
@@ -25,7 +38,7 @@
             android:value="true" />
         <meta-data
             android:name="xposeddescription"
-            android:value="すべてのアプリでマルチウィンドウを強制的に有効にし、通知から簡単に切り替えられるようにします" />
+            android:value="すべてのアプリでマルチウィンドウを強制的に有効にし、アプリから選択して起動できます" />
         <meta-data
             android:name="xposedminversion"
             android:value="82" />
