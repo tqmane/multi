@@ -3,9 +3,6 @@ package com.tqmane.multiwindowpatch;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.content.pm.ApplicationInfo;
-import android.os.Build;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -139,11 +136,8 @@ public class MainHook implements IXposedHookLoadPackage {
                 packageName
             );
             
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent);
-            } else {
-                context.startService(serviceIntent);
-            }
+            // Android 8.0以降は startForegroundService
+            context.startForegroundService(serviceIntent);
             
             XposedBridge.log(TAG + ": Notification shown for " + packageName);
         } catch (Exception e) {

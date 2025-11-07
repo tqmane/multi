@@ -4,10 +4,8 @@ import android.app.ActivityOptions;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 
 import de.robv.android.xposed.XposedBridge;
-import de.robv.android.xposed.XposedHelpers;
 
 /**
  * マルチウィンドウアクションレシーバー
@@ -48,33 +46,17 @@ public class MultiWindowActionReceiver extends BroadcastReceiver {
                 return;
             }
             
-            // マルチウィンドウモードでアプリを起動
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                // フラグを設定
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
-                
-                try {
-                    // ActivityOptionsでマルチウィンドウモードを指定
-                    ActivityOptions options = ActivityOptions.makeBasic();
-                    // 分割画面モードで起動
-                    options.setLaunchBounds(null);  // システムにバウンドを決定させる
-                    
-                    context.startActivity(launchIntent, options.toBundle());
-                    XposedBridge.log(TAG + ": Successfully launched " + packageName + " in multi-window mode");
-                } catch (Exception e) {
-                    XposedBridge.log(TAG + ": Failed to use ActivityOptions, trying fallback: " + e.getMessage());
-                    // フォールバック: オプションなしで起動
-                    context.startActivity(launchIntent);
-                }
-                
-            } else {
-                // Android 7.0未満では通常起動
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(launchIntent);
-                XposedBridge.log(TAG + ": Launched " + packageName + " (multi-window not supported on this Android version)");
-            }
+            // Android 15+ でマルチウィンドウモードでアプリを起動
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
+            
+            // ActivityOptionsでマルチウィンドウモードを指定
+            ActivityOptions options = ActivityOptions.makeBasic();
+            options.setLaunchBounds(null);  // システムにバウンドを決定させる
+            
+            context.startActivity(launchIntent, options.toBundle());
+            XposedBridge.log(TAG + ": Successfully launched " + packageName + " in multi-window mode");
             
         } catch (Exception e) {
             XposedBridge.log(TAG + ": Failed to launch in multi-window: " + e.getMessage());

@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -141,42 +140,24 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
             
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                // マルチウィンドウモードで起動
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
-                
-                try {
-                    ActivityOptions options = ActivityOptions.makeBasic();
-                    options.setLaunchBounds(null);
-                    startActivity(launchIntent, options.toBundle());
-                    
-                    Toast.makeText(this, 
-                        appInfo.appName + " をマルチウィンドウで起動しました", 
-                        Toast.LENGTH_SHORT).show();
-                    
-                } catch (Exception e) {
-                    Log.e(TAG, "Failed to launch with ActivityOptions: " + e.getMessage());
-                    startActivity(launchIntent);
-                    Toast.makeText(this, 
-                        appInfo.appName + " を起動しました", 
-                        Toast.LENGTH_SHORT).show();
-                }
-                
-            } else {
-                // Android 7.0未満では通常起動
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(launchIntent);
-                Toast.makeText(this, 
-                    "このAndroidバージョンではマルチウィンドウに対応していません", 
-                    Toast.LENGTH_SHORT).show();
-            }
+            // Android 15+ でマルチウィンドウモードで起動
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
+            
+            ActivityOptions options = ActivityOptions.makeBasic();
+            options.setLaunchBounds(null);
+            startActivity(launchIntent, options.toBundle());
+            
+            Toast.makeText(this, 
+                appInfo.appName + " をマルチウィンドウで起動しました", 
+                Toast.LENGTH_SHORT).show();
             
         } catch (Exception e) {
             Log.e(TAG, "Failed to launch app: " + e.getMessage());
             Toast.makeText(this, "起動に失敗しました: " + e.getMessage(), 
                 Toast.LENGTH_SHORT).show();
         }
+    }
     }
 }
