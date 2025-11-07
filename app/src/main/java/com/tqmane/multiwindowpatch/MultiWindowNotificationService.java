@@ -79,8 +79,8 @@ public class MultiWindowNotificationService extends Service {
         }
         
         // マルチウィンドウを開くインテント
-        Intent openIntent = new Intent(this, MultiWindowActionReceiver.class);
-        openIntent.setAction(ACTION_OPEN_MULTI_WINDOW);
+        Intent openIntent = new Intent(ACTION_OPEN_MULTI_WINDOW);
+        openIntent.setPackage(getPackageName());  // 明示的にパッケージを指定
         openIntent.putExtra(EXTRA_PACKAGE_NAME, packageName);
         
         PendingIntent pendingIntent = PendingIntent.getBroadcast(

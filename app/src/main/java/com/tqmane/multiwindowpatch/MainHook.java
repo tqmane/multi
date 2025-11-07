@@ -198,49 +198,68 @@ public class MainHook implements IXposedHookLoadPackage {
      * ApplicationInfo のフラグを変更してマルチウィンドウをサポート
      */
     private void hookApplicationInfo(LoadPackageParam lpparam) {
+        // ActivityRecord のフックは Android バージョンによって異なるため、
+        // 失敗してもエラーとして扱わない
         try {
-            // ActivityManagerService で ApplicationInfo が使用される際にフラグを変更
             Class<?> activityRecord = XposedHelpers.findClass(
                 "com.android.server.wm.ActivityRecord",
                 lpparam.classLoader
             );
             
-            // ActivityRecord のコンストラクタをフック
-            XposedHelpers.findAndHookConstructor(
-                activityRecord,
-                "com.android.server.wm.ActivityTaskManagerService",
-                int.class,
-                "android.content.pm.ActivityInfo",
-                new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        try {
-                            // ActivityInfo を取得
-                            Object info = param.args[2];
-                            if (info != null) {
-                                // resizeMode フィールドを変更
-                                int resizeModeResizeable = 2; // RESIZE_MODE_RESIZEABLE
-                                XposedHelpers.setIntField(info, "resizeMode", resizeModeResizeable);
-                                
-                                // ApplicationInfo のフラグも変更
-                                Object appInfo = XposedHelpers.getObjectField(info, "applicationInfo");
-                                if (appInfo != null) {
-                                    int flags = XposedHelpers.getIntField(appInfo, "flags");
-                                    // FLAG_SUPPORTS_SCREEN_DENSITIES などを追加
-                                    XposedHelpers.setIntField(appInfo, "flags", flags);
-                                }
-                            }
-                        } catch (Throwable t) {
-                            // エラーは無視（すべてのケースで適用できるわけではないため）
+            // Android 14/15 では異なるコンストラクタシグネチャを使用する可能性がある
+            // 複数のパターンを試行
+            boolean hooked = false;
+            
+            // パターン1: 古いシグネチャ
+            try {
+                XposedHelpers.findAndHookConstructor(
+                    activityRecord,
+                    "com.android.server.wm.ActivityTaskManagerService",
+                    int.class,
+                    "android.content.pm.ActivityInfo",
+                    new XC_MethodHook() {
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                            modifyActivityInfo(param.args[2]);
                         }
                     }
-                }
-            );
+                );
+                hooked = true;
+                XposedBridge.log(TAG + ": Hooked ActivityRecord constructor (pattern 1)");
+            } catch (Throwable t) {
+                // パターン1失敗、次を試行
+            }
             
-            XposedBridge.log(TAG + ": Hooked ActivityRecord constructor");
+            // パターン2: より詳細なシグネチャ
+            if (!hooked) {
+                try {
+                    // Android 12以降の可能性があるシグネチャ
+                    XposedHelpers.findAndHookConstructor(
+                        activityRecord,
+                        "com.android.server.wm.ActivityTaskManagerService",
+                        int.class,
+                        "android.content.pm.ActivityInfo",
+                        "android.content.Intent",
+                        new XC_MethodHook() {
+                            @Override
+                            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                                modifyActivityInfo(param.args[2]);
+                            }
+                        }
+                    );
+                    hooked = true;
+                    XposedBridge.log(TAG + ": Hooked ActivityRecord constructor (pattern 2)");
+                } catch (Throwable t) {
+                    // パターン2も失敗
+                }
+            }
+            
+            if (!hooked) {
+                XposedBridge.log(TAG + ": Could not hook ActivityRecord constructor (not critical)");
+            }
             
         } catch (Throwable t) {
-            XposedBridge.log(TAG + ": Failed to hook ActivityRecord: " + t.getMessage());
+            XposedBridge.log(TAG + ": ActivityRecord not found (not critical): " + t.getMessage());
         }
         
         // 代替アプローチ: PackageParser をフック
@@ -280,6 +299,29 @@ public class MainHook implements IXposedHookLoadPackage {
             
         } catch (Throwable t) {
             XposedBridge.log(TAG + ": Failed to hook PackageParser: " + t.getMessage());
+        }
+    }
+    
+    /**
+     * ActivityInfo を修正してマルチウィンドウを有効化
+     */
+    private void modifyActivityInfo(Object info) {
+        try {
+            if (info != null) {
+                // resizeMode フィールドを変更
+                int resizeModeResizeable = 2; // RESIZE_MODE_RESIZEABLE
+                XposedHelpers.setIntField(info, "resizeMode", resizeModeResizeable);
+                
+                // ApplicationInfo のフラグも変更
+                Object appInfo = XposedHelpers.getObjectField(info, "applicationInfo");
+                if (appInfo != null) {
+                    int flags = XposedHelpers.getIntField(appInfo, "flags");
+                    // FLAG_SUPPORTS_SCREEN_DENSITIES などを追加
+                    XposedHelpers.setIntField(appInfo, "flags", flags);
+                }
+            }
+        } catch (Throwable t) {
+            // エラーは無視（すべてのケースで適用できるわけではないため）
         }
     }
 }

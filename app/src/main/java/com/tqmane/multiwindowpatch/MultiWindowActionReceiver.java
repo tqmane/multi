@@ -37,6 +37,8 @@ public class MultiWindowActionReceiver extends BroadcastReceiver {
      */
     private void openInMultiWindow(Context context, String packageName) {
         try {
+            XposedBridge.log(TAG + ": Attempting to launch " + packageName + " in multi-window mode");
+            
             // パッケージマネージャーからランチャーインテントを取得
             Intent launchIntent = context.getPackageManager()
                 .getLaunchIntentForPackage(packageName);
@@ -53,20 +55,25 @@ public class MultiWindowActionReceiver extends BroadcastReceiver {
                 launchIntent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
                 launchIntent.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
                 
-                // ActivityOptionsでマルチウィンドウモードを指定
-                ActivityOptions options = ActivityOptions.makeBasic();
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                try {
+                    // ActivityOptionsでマルチウィンドウモードを指定
+                    ActivityOptions options = ActivityOptions.makeBasic();
                     // 分割画面モードで起動
                     options.setLaunchBounds(null);  // システムにバウンドを決定させる
+                    
+                    context.startActivity(launchIntent, options.toBundle());
+                    XposedBridge.log(TAG + ": Successfully launched " + packageName + " in multi-window mode");
+                } catch (Exception e) {
+                    XposedBridge.log(TAG + ": Failed to use ActivityOptions, trying fallback: " + e.getMessage());
+                    // フォールバック: オプションなしで起動
+                    context.startActivity(launchIntent);
                 }
                 
-                context.startActivity(launchIntent, options.toBundle());
-                
-                XposedBridge.log(TAG + ": Launched " + packageName + " in multi-window mode");
             } else {
                 // Android 7.0未満では通常起動
                 launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(launchIntent);
+                XposedBridge.log(TAG + ": Launched " + packageName + " (multi-window not supported on this Android version)");
             }
             
         } catch (Exception e) {

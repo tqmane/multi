@@ -6,6 +6,13 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    
+    <!-- Android 12以降でPendingIntentからアクティビティを起動するために必要 -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+        </intent>
+    </queries>
 
     <application
         android:label="Multi Window Patch"
@@ -35,14 +42,17 @@
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="マルチウィンドウ切り替え通知" />
+                android:value="Provides persistent notification for multi-window mode switching" />
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE_JP"
+                android:value="マルチウィンドウモード切り替えのための常時通知を提供" />
         </service>
 
         <!-- マルチウィンドウアクションレシーバー -->
         <receiver
             android:name=".MultiWindowActionReceiver"
             android:enabled="true"
-            android:exported="false">
+            android:exported="true">
             <intent-filter>
                 <action android:name="com.tqmane.multiwindowpatch.OPEN_MULTI_WINDOW" />
             </intent-filter>
