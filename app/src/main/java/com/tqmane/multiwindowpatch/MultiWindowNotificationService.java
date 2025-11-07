@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
+import android.util.Log;
 
 /**
  * マルチウィンドウ通知サービス
@@ -75,7 +76,16 @@ public class MultiWindowNotificationService extends Service {
             (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         
         if (notificationManager == null) {
+            Log.w("MultiWindowService", "NotificationManager unavailable");
             return;
+        }
+
+        // Android 13+ requires user to grant POST_NOTIFICATIONS at runtime
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (!notificationManager.areNotificationsEnabled()) {
+                Log.i("MultiWindowService", "Notifications are disabled for this app - user must enable them in settings");
+                // Still proceed to create the channel and attempt to start foreground; OS may block visuals.
+            }
         }
         
         // マルチウィンドウを開くインテント
@@ -120,7 +130,13 @@ public class MultiWindowNotificationService extends Service {
         }
         
         // フォアグラウンドサービスとして開始
-        startForeground(NOTIFICATION_ID, builder.build());
+        try {
+            startForeground(NOTIFICATION_ID, builder.build());
+        } catch (SecurityException se) {
+            Log.e("MultiWindowService", "Failed to start foreground service - missing permission or not allowed: " + se.getMessage());
+        } catch (Exception e) {
+            Log.e("MultiWindowService", "Failed to start foreground service: " + e.getMessage());
+        }
     }
     
     @Override
