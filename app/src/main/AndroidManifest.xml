@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 通知表示とフォアグラウンドサービスに必要な権限 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <application
+        android:label="Multi Window Patch"
+        android:icon="@mipmap/ic_launcher">
+        
+        <!-- Xposed Module Metadata -->
+        <meta-data
+            android:name="xposedmodule"
+            android:value="true" />
+        <meta-data
+            android:name="xposeddescription"
+            android:value="すべてのアプリでマルチウィンドウを強制的に有効にし、通知から簡単に切り替えられるようにします" />
+        <meta-data
+            android:name="xposedminversion"
+            android:value="82" />
+        <meta-data
+            android:name="xposedscope"
+            android:resource="@array/xposed_scope" />
+
+        <!-- マルチウィンドウ通知サービス -->
+        <service
+            android:name=".MultiWindowNotificationService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="マルチウィンドウ切り替え通知" />
+        </service>
+
+        <!-- マルチウィンドウアクションレシーバー -->
+        <receiver
+            android:name=".MultiWindowActionReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.tqmane.multiwindowpatch.OPEN_MULTI_WINDOW" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>
